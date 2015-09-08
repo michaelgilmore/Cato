@@ -1,0 +1,29 @@
+20150121 v1.2.3
+Removing a proactive greeting at startup. It is tripping on itself.
+
+20141230 v1.1
+Calls hosted python scripts for programmatic responses, e.g. get current time.
+Added ability to wait to finish speaking before listening; delay = 500ms
+
+20141229 v1.0
+Listens on button click.
+Gives canned responses.
+Learns responses and stores locally.
+
+
+NOTES
+Have to adb kill-server, sudo adb start-server when rebooting Ubuntu box. Figure out some day...
+
+RESEARCH
+http://code.tutsplus.com/tutorials/android-sdk-using-the-text-to-speech-engine--mobile-8540
+acivity lifetime event handlers http://developer.android.com/reference/android/app/Activity.html
+
+TODO
+1. save learned responses online
+2. access learned responses from another device
+3. write to and read from a google doc spreadsheet, e.g. keeping track of sleep time
+4. call a non-gcc web service
+5. send email
+6. send text message
+7. manage todos
+8. get current weather and tomorrow's prediction
