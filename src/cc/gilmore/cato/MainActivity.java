@@ -49,7 +49,7 @@ public class MainActivity extends Activity implements OnClickListener, OnInitLis
 			listen();
 		}
 		else if (status == TextToSpeech.ERROR) {
-			System.out.println("Sorry! Text To Speech failed...");
+			writeToScreen("Sorry! Text To Speech failed...");
 		}
 		*/
 	}
@@ -86,7 +86,19 @@ public class MainActivity extends Activity implements OnClickListener, OnInitLis
 					brain.stopWaiting();
 				}
 				else {
-					brain.saveResponseToInput(previousInput, whatSheSaid);
+					if(whatSheSaid.startsWith("you should say ")) {
+						whatSheSaid = whatSheSaid.substring("you should say ".length());
+					}
+					if(whatSheSaid.startsWith("say ")) {
+						whatSheSaid = whatSheSaid.substring("say ".length());
+					}
+					boolean saved = brain.saveResponseToInput(previousInput, whatSheSaid);
+					if(saved) {
+						writeStatusToScreen("response saved");
+					}
+					else {
+						writeStatusToScreen("response not saved");
+					}
 					previousInput = null;
 				}
 			}
@@ -114,8 +126,20 @@ public class MainActivity extends Activity implements OnClickListener, OnInitLis
 		}
 	}
 
+	/*
+	 * This method is for communication with the user.
+	 */
 	private void writeToScreen(String screenResponse) {
+		System.out.println(screenResponse);
 		((TextView)findViewById(R.id.text1)).setText(screenResponse);
+	}
+
+	/*
+	 * This method is for letting the user know internal status information of the system.
+	 */
+	private void writeStatusToScreen(String statusMessage) {
+		System.out.println("STATUS:" + statusMessage);
+		((TextView)findViewById(R.id.status_msg)).setText(statusMessage);
 	}
 
 	@Override
@@ -130,9 +154,7 @@ public class MainActivity extends Activity implements OnClickListener, OnInitLis
 	private void say(String msg) {
 		int retVal = tts.speak(msg, TextToSpeech.QUEUE_ADD, null);
 		if(retVal != TextToSpeech.SUCCESS) {
-			String errMsg = "ERROR: speak() returned " + retVal;
-			writeToScreen(errMsg);
-			System.out.println(errMsg);
+			writeStatusToScreen("ERROR: speak() returned " + retVal);
 		}
 	}
 
@@ -142,18 +164,20 @@ public class MainActivity extends Activity implements OnClickListener, OnInitLis
 		final long threshold = 5000;//ms
 		long totalWait = 0;
 		
+        writeStatusToScreen("Waiting to listen...");
 		while(tts.isSpeaking() && totalWait < threshold) {
 			//Need to let any prompts finish before starting to listen.
 			//It doesn't filter itself out.
 			try {
 	            Thread.sleep(delay);
 	            totalWait += delay;
-	            System.out.println("Waiting to listen...");
 	        } catch (InterruptedException e) {
 	        	//do nothing for now...
-	            System.out.println("Failing to wait");
+	            writeStatusToScreen("Failing to wait");
 	        }
 		}
+
+		writeStatusToScreen("I hear you...");
 
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
 

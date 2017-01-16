@@ -23,4 +23,13 @@
         android:layout_marginTop="37dp"
         android:src="@android:drawable/ic_btn_speak_now" />
 
+    <TextView
+        android:id="@+id/status_msg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/button1"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="132dp"
+        android:text="..." />
+
 </RelativeLayout>

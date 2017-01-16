@@ -15,7 +15,8 @@ public class Brain {
 	public static final String MY_NAME = "Cato";
 	public static final String MY_PHONETIC_NAME = "Kayto";
 
-	private final String CALL_WEB_SERVICE_TAG = "call webservice";
+	private final String CALL_WEBSERVICE_TAG = "call webservice";
+	private final String CALL_WEB_SERVICE_TAG = "call web service";
 	
 	private HashMap<String, String> learnedResponses = null;
 	private boolean waitingForResponse = false;
@@ -23,6 +24,10 @@ public class Brain {
 	
 	
 	public String getResponseFor(String input) {
+		
+		if(input == null || input.length() == 0) {
+			return "What did you say?";
+		}
 		
 		String response = null;
 		spokenResponse = true;
@@ -46,9 +51,17 @@ public class Brain {
 		
 		//handle all web service calls here
 		if(response != null) {
+			String webService = "";
+			if(response.startsWith(CALL_WEBSERVICE_TAG)) {
+				webService = response.replace(CALL_WEBSERVICE_TAG, "");
+			}
 			if(response.startsWith(CALL_WEB_SERVICE_TAG)) {
-				String webService = response.replace(CALL_WEB_SERVICE_TAG, "");
-				response = callWebService(webService);
+				webService = response.replace(CALL_WEB_SERVICE_TAG, "");
+			}
+			if(webService.length() > 0 ) {
+				BrainOnlineRead bor = new BrainOnlineRead();
+				bor.execute(webService);
+				response = bor.getResponse();
 			}
 		}
 		
@@ -60,45 +73,6 @@ public class Brain {
 		return response;
 	}
 	
-	private String callWebService(String webService) {
-		String response = "";
-		String wsURLName = webService.trim().replace(" ",  "_");
-		String urlString = "http://gilmore.cc/services/" + wsURLName + ".py";
-		
-		URL url = null;
-        InputStream is = null;
-        
-		try {
-			url = new URL(urlString);
-		} catch (MalformedURLException e) {
-			response = "Failed to read service URL " + urlString;
-		}
-		if(url == null) {
-			return "Failed to create URL object " + urlString;
-		}
-		
-		try {
-	        is = url.openStream();
-		} catch (IOException e) {
-			response = "Failed to open URL stream " + urlString;
-		}
-		if(is == null) {
-			return "Failed to create InputStream object " + urlString;
-		}
-		
-		try {
-	        BufferedReader br = new BufferedReader(new InputStreamReader(is));
-	        String line;
-	        while ((line = br.readLine()) != null) {
-	        	response = response + line;
-	        }
-		} catch (IOException e) {
-			e.printStackTrace();
-			response = "Failed to read input stream " + urlString;
-		}
-		return response;
-	}
-
 	public boolean isWaitingForAResponse() {
 		return waitingForResponse;
 	}
@@ -107,36 +81,18 @@ public class Brain {
 		waitingForResponse = false;
 	}
 	
-	public void saveResponseToInput(String input, String response) {
+	public boolean saveResponseToInput(String input, String response) {
 		if(learnedResponses == null) {
 			learnedResponses = new HashMap<String, String>();
 		}
 		
 		learnedResponses.put(input,  response);
-		saveResponseOnline(input, response);
+		BrainOnlineWrite bow = new BrainOnlineWrite();
+		bow.execute(input, response);
 		
 		stopWaiting();
-	}
-
-	private void saveResponseOnline(String input, String response) {
-		String urlString = "http://gilmore.cc/services/remember_response.py?request=" + input + "&response=" + response;
 		
-		URL url = null;
-        
-		try {
-			url = new URL(urlString);
-		} catch (MalformedURLException e) {
-			System.out.println("Failed to create new URL for " + urlString);
-		}
-		if(url == null) {
-			System.out.println("Failed to create URL object " + urlString);
-		}
-		
-		try {
-	        url.openStream();
-		} catch (IOException e) {
-			System.out.println("Failed to open URL stream " + urlString);
-		}
+		return bow.writeSucceeded();
 	}
 
 	public boolean isResponseSpoken() {
@@ -144,16 +100,28 @@ public class Brain {
 	}
 
 	public void syncWithServer() {
-		String memory = callWebService("get_memory");
-		HashMap<String, String> memoryMap = convertMemoryToHashMap(memory);
 		if(learnedResponses == null) {
 			learnedResponses = new HashMap<String, String>();
 		}
-		learnedResponses.putAll(memoryMap);
+
+		try {
+			BrainOnlineRead bor = new BrainOnlineRead();
+			bor.execute();
+			String memory = bor.getResponse();
+			HashMap<String, String> memoryMap = convertMemoryToHashMap(memory);
+			learnedResponses.putAll(memoryMap);
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private HashMap<String, String> convertMemoryToHashMap(String memory) {
 		HashMap<String, String> memoryHashMap = new HashMap<String, String>();
+		
+		if(memory ==  null || memory.length() == 0) {
+			return memoryHashMap;
+		}
 		
 		//20150106 Current memory format ('request1', 'response1')('request2', 'response2')
 		Pattern pattern = Pattern.compile("\\('(.+?)',\\s*'(.+?)'\\)");
