@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.apache.http.client.methods.HttpGet;
-
 import android.os.AsyncTask;
 
 public class BrainOnlineWrite extends AsyncTask<String, Void, Void>{
@@ -46,8 +44,7 @@ public class BrainOnlineWrite extends AsyncTask<String, Void, Void>{
 		}
 		
 		try {
-//	        url.openStream();
-	        HttpGet httpGet = new HttpGet(urlString);
+	        url.openStream();
 	        responseWritten = true;
 		} catch (IOException e) {
 			System.out.println("Failed to open URL stream " + urlString);

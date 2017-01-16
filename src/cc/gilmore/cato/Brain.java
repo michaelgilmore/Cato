@@ -87,6 +87,7 @@ public class Brain {
 		}
 		
 		learnedResponses.put(input,  response);
+		
 		BrainOnlineWrite bow = new BrainOnlineWrite();
 		bow.execute(input, response);
 		
